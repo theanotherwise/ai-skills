@@ -1,5 +1,5 @@
 ---
-name: bitnami-chart
+name: opsolving-bitnami-chart
 description: Create and refactor Helm charts in Bitnami's structural style while using the Opsolving common library instead of Bitnami's repository or OCI registry. Use when designing Chart.yaml, values.yaml, templates, _helpers.tpl, single-component or multi-component charts, or when reviewing an existing chart for conformance with these conventions.
 ---
 

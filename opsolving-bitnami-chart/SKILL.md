@@ -276,6 +276,8 @@ dependencies:
 
 Use `2.x.x` by default, matching the published Opsolving example. Pin an exact published version only when the target repository's dependency policy explicitly requires deterministic pins; do not infer that requirement merely from the currently published version.
 
+Omit `kubeVersion`, `home`, and `sources` from `Chart.yaml`. Do not copy these optional metadata keys from reference charts.
+
 Do not use Bitnami's OCI location for `common`:
 
 ```yaml

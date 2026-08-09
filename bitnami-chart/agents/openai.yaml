@@ -1,4 +1,4 @@
 interface:
-  display_name: "Bitnami Chart"
+  display_name: "Opsolving - Bitnami Chart"
   short_description: "Build Bitnami-style Helm charts"
   default_prompt: "Use $bitnami-chart to create a Helm chart in Bitnami style with Opsolving common."

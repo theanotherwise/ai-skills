@@ -181,23 +181,11 @@ Preserve the logical order even when the chart does not need every section.
 
 ### Document parameters
 
-Document public values immediately before their definitions. Use the `readme-generator-for-helm` convention:
+Before creating or refactoring `values.yaml`, read and apply [references/values-documentation.md](references/values-documentation.md). It defines the required Bitnami-style placement of `@section`, `@param`, examples, references, and separator comments.
 
-```yaml
-## @section Service parameters
+Do not collect every descendant parameter above its parent map. Treat each YAML map recursively as either a compact structured value or a configuration namespace. Group concise child documentation above a compact map such as a probe or security context. Put documentation inside a large component or feature namespace such as `master`, `replica`, `redis`, `service`, or `persistence`, immediately before the child it documents.
 
-## @param service.type Kubernetes Service type
-## @param service.ports.http Service HTTP port
-## @param service.annotations Additional custom annotations for the Service
-##
-service:
-  type: ClusterIP
-  ports:
-    http: 8080
-  annotations: {}
-```
-
-Use the complete parameter path, such as `master.persistence.size`, rather than only `size`. Add examples when the accepted shape is not obvious. Do not restate Kubernetes documentation unless it helps chart users make a decision.
+Always use complete parameter paths such as `master.persistence.size`. Preserve the target chart's established documentation layout when it is consistent; otherwise follow the closest Bitnami reference and the decision procedure in the reference file.
 
 ### Use familiar names and stable types
 

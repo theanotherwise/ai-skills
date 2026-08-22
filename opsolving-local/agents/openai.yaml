@@ -1,4 +1,4 @@
 interface:
   display_name: "Opsolving - Local"
-  short_description: "Work safely in local multi-repo workspaces"
-  default_prompt: "Use $opsolving-local to make this change in the correct child repository and complete the authorized Git workflow."
+  short_description: "Work safely in local Git projects and workspaces"
+  default_prompt: "Use $opsolving-local to select the correct local repository, make this change, and complete the authorized Git workflow."

@@ -6,7 +6,7 @@ Read this reference before implementing a new provider resource or expanding an 
 
 Record the atomic module boundary: the one core resource instance, its subordinate resource collections, the exact provider source, minimum supported version, selected stable or beta channel, and every resource or data source owned by the module. Use this precedence:
 
-1. user requirements and governing repository instructions;
+1. user requirements and governing project instructions;
 2. official documentation for the selected provider version and channel;
 3. an already available `terraform providers schema -json` result for the selected provider;
 4. official provider source code or upstream service API documentation when the provider documentation is ambiguous.
@@ -38,7 +38,7 @@ Include:
 - sensitive, write-only, and ephemeral arguments;
 - computed-only attributes and import identifiers for review, even when they do not become module inputs.
 
-Keep the checklist as a working artifact unless the target repository explicitly tracks coverage documentation. Completion requires every configurable row to be implemented as a typed input, satisfied by a clear internal invariant, or given a deliberate user-approved exclusion. Do not silently omit a row because it is uncommon, advanced, or difficult to model.
+Keep the checklist as a working artifact unless the target project explicitly tracks coverage documentation. Completion requires every configurable row to be implemented as a typed input, satisfied by a clear internal invariant, or given a deliberate user-approved exclusion. Do not silently omit a row because it is uncommon, advanced, or difficult to model.
 
 ## Map documentation into the module API
 

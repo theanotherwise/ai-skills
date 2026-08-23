@@ -15,11 +15,11 @@ Do not reduce a resource to a convenient minimum. Every documented configurable 
 
 ## Required workflow
 
-1. Read the governing repository instructions, existing module files, examples, tests, provider constraints, and lockfile policy.
+1. Read the governing project instructions, existing module files, examples, tests, provider constraints, and lockfile policy.
 2. Identify the one core resource, any subordinate resource collections, and the exact data sources the module owns. Keep unrelated provider resources outside the module and do not multiply the core merely because Terraform supports `for_each`.
 3. Identify the provider source, minimum supported version, and stable or beta channel. Never silently switch channels.
 4. Before adding or substantially changing a resource, read [references/resource-coverage.md](references/resource-coverage.md) and audit the official versioned provider documentation for that resource.
-5. Design the complete typed input API before writing resource blocks. Preserve the target repository's existing compatible API when refactoring.
+5. Design the complete typed input API before writing resource blocks. Preserve the target module's existing compatible API when refactoring.
 6. Implement the file, collection, resource-address, output, and example conventions below.
 7. Build a test-coverage matrix that maps every public input path, conditional nested block, documented constraint, stable collection key, and output path to a concrete test and assertion.
 8. Run the complete non-mutating validation required by the module contract. If a provider or module dependency is unavailable, report the result as blocked and do not call the module complete or compliant.
@@ -146,4 +146,4 @@ Use provider documentation to derive tests; do not hardcode a provider-specific 
 
 `terraform fmt` and static declaration checks do not replace `terraform validate` and the required test suite. If those checks cannot run because dependencies are unavailable and initialization is not authorized, identify the exact blocked commands and hand off the module as unverified rather than complete.
 
-Do not run `terraform init` when it would fetch dependencies without authorization. Do not run `plan` against a real backend, `apply`, import, state mutation, provider authentication, or cloud API changes unless explicitly requested. Finish by reviewing the complete diff, checking conflict markers and repository status, and stating exactly which validation did and did not run.
+Do not run `terraform init` when it would fetch dependencies without authorization. Do not run `plan` against a real backend, `apply`, import, state mutation, provider authentication, or cloud API changes unless explicitly requested. Finish by reviewing every changed module file, checking conflict markers, and stating exactly which validation did and did not run.

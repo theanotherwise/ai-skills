@@ -26,20 +26,26 @@ Do not reduce a resource to a convenient minimum. Every documented configurable 
 
 ## File convention
 
-Use lowercase filenames and group code by resource domain:
+Use lowercase filenames in a flat module root and pair files by individual provider resource:
 
 ```text
 versions.tf
 locals.tf                    # only when real transformations exist
 outputs.tf
-v-<domain>.tf                # variables for the domain
-d-<domain>.tf                # data sources, only when needed
-r-<domain>.tf                # managed resources for the domain
+v-<resource>.tf              # public inputs owned by one managed resource
+d-<data-source>.tf           # exactly one top-level data block
+r-<resource>.tf              # exactly one top-level resource block
 examples/<name>/main.tf      # direct module call only
 tests/<name>.tftest.hcl      # focused module tests
 ```
 
-Keep related variable and resource filenames paired, for example `v-network.tf` and `r-network.tf`. Split a file only when the resulting domains remain coherent; do not create one file per trivial block.
+Every top-level managed `resource` block must have its own `r-<resource>.tf` file. Never place two different resource blocks, two fixed instances, or a core resource and a subordinate resource in the same `r-*.tf` file. Nested provider blocks and Terraform `dynamic` blocks belong inside their owning resource file and do not count as separate resources.
+
+Give every configurable resource a matching `v-<resource>.tf` file containing only the public variables owned by that resource. Prefer one typed object for a single resource and one `map(object(...))` for a repeatable subordinate resource collection. Do not place inputs for another resource in the same variable file. Bind inherited core values internally instead of duplicating them in the subordinate variable contract.
+
+For example, a VPC module uses `v-network.tf` with `r-network.tf` and `v-subnetwork.tf` with `r-subnetwork.tf`. It must not put both `google_compute_network` and `google_compute_subnetwork` in `r-network.tf`, and it must not put both `network` and `subnetworks` resource contracts in `v-network.tf`.
+
+Keep resource files at the module root. Do not create a directory per provider resource merely to satisfy this separation. When several fixed instances of the same provider type are required, give each resource block a role-qualified pair such as `v-address-internal.tf` and `r-address-internal.tf`.
 
 Do not add `main.tf`, `providers.tf`, `backend.tf`, `terraform.tfvars`, or `imports.tf` to a reusable module under this convention. Add `moved.tf` only for an actual state-address migration. Do not keep empty `locals.tf`, `d-*.tf`, examples, or tests as placeholders.
 
@@ -124,5 +130,7 @@ The basic example demonstrates the normal path; tests or additional named exampl
 ## Validation
 
 Run `terraform fmt -check -recursive` after formatting. Run `terraform validate` and `terraform test` when their providers and modules are already available or dependency initialization is authorized. Prefer mocked provider tests for module logic when the selected Terraform version supports them.
+
+Before finishing, inspect top-level declarations and confirm that every `r-*.tf` contains exactly one managed resource block, every `d-*.tf` contains exactly one data block, and each configurable resource has the correctly named `v-*.tf` counterpart without variables belonging to another resource.
 
 Do not run `terraform init` when it would fetch dependencies without authorization. Do not run `plan` against a real backend, `apply`, import, state mutation, provider authentication, or cloud API changes unless explicitly requested. Finish by reviewing the complete diff, checking conflict markers and repository status, and stating exactly which validation did and did not run.

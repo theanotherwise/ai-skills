@@ -1,0 +1,4 @@
+interface:
+  display_name: "Opsolving - Airflow DAGs"
+  short_description: "Build layered Airflow DAG repositories"
+  default_prompt: "Use $opsolving-airflow-dags to create or refactor Airflow DAGs using the instances, processes, and libs architecture."

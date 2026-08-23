@@ -1,20 +1,22 @@
 ---
 name: opsolving-terraform-module
-description: Create and refactor reusable Terraform modules that expose the complete documented configuration surface of each selected provider resource and use stable Opsolving file, collection, naming, output, example, and validation conventions. Use when building a provider-backed module or expanding one to full resource coverage. Do not use for Terragrunt live layouts, provider configuration, or applying infrastructure.
+description: Create and refactor atomic reusable Terraform modules that correctly handle the complete documented configuration surface of each selected provider resource and use stable Opsolving file, collection, naming, output, example, and validation conventions. Use when building a provider-backed module or expanding one to full resource coverage. Do not use for Terragrunt live layouts, provider configuration, or applying infrastructure.
 ---
 
 # Build complete Terraform modules
 
 ## Goal
 
-Build reusable child modules with a stable public API. For every resource or data source intentionally owned by the module, support the complete configurable surface documented for the selected provider source, version, and release channel. Complete coverage applies within the selected resources; it does not authorize adding adjacent resources such as APIs, routers, NAT gateways, firewall rules, IAM bindings, monitoring, or deployment configuration that are outside the requested abstraction.
+Build atomic reusable child modules with a stable public API. By default, one module instance owns one core resource instance named `this` plus any repeatable subordinate resources that belong to that core. Do not turn the core resource into a fleet, batch, or `for_each` map unless the user explicitly requests a multi-core abstraction.
 
-Do not reduce a resource to a convenient minimum. Every documented configurable argument and nested block must be reachable through a typed module input, correctly rendered, and validated according to the provider contract. Review computed-only attributes for outputs, but do not turn them into inputs or expose secrets merely to claim coverage.
+For every resource or data source intentionally owned by the module, support the complete configurable surface documented for the selected provider source, version, and release channel. Complete coverage applies within the selected resources; it does not authorize adding adjacent resources such as APIs, routers, NAT gateways, firewall rules, IAM bindings, monitoring, or deployment configuration that are outside the requested abstraction.
+
+Do not reduce a resource to a convenient minimum. Every documented configurable argument and nested block must be either reachable through a typed module input or deliberately satisfied by an internal module invariant, such as binding a child resource directly to the module-owned parent ID. Correctly render and validate the resulting provider contract. Review computed-only attributes for outputs, but do not turn them into inputs or expose secrets merely to claim coverage.
 
 ## Required workflow
 
 1. Read the governing repository instructions, existing module files, examples, tests, provider constraints, and lockfile policy.
-2. Identify the module's intended abstraction and the exact resources and data sources it owns. Keep unrelated provider resources outside the module.
+2. Identify the one core resource, any subordinate resource collections, and the exact data sources the module owns. Keep unrelated provider resources outside the module and do not multiply the core merely because Terraform supports `for_each`.
 3. Identify the provider source, minimum supported version, and stable or beta channel. Never silently switch channels.
 4. Before adding or substantially changing a resource, read [references/resource-coverage.md](references/resource-coverage.md) and audit the official versioned provider documentation for that resource.
 5. Design the complete typed input API before writing resource blocks. Preserve the target repository's existing compatible API when refactoring.
@@ -47,12 +49,14 @@ Put only `required_version` and `required_providers` in `versions.tf`. Declare t
 
 Choose collection types by identity and ordering semantics:
 
-- Use `object(...)` for one structured value.
+- Use one `object(...)` for the core resource configuration and render one core resource named `this`.
 - Use `map(object(...))` with stable semantic keys and `for_each` for independently managed resource instances.
 - Use `set(string)` or another primitive set for unordered unique primitive identities.
 - Use `list(...)` only when ordering is part of the domain contract or the provider API explicitly requires an ordered sequence.
 - Do not use `list(object(...))` with `count` for independently managed resources. Inserting or reordering an element must not shift resource addresses.
 - Avoid `set(object(...))` for managed resource identity because changing any hashed field can change membership. Prefer an explicit stable map key.
+
+Do not use `map(object(...))` for the core resource merely to make the module capable of creating an arbitrary number of cores. A module that owns one VPC and its subnetworks creates one network and a keyed subnetwork collection; a fleet of VPCs is a different abstraction and requires an explicit request.
 
 The map key is the Terraform identity and must remain stable when mutable attributes change. Use the same key in outputs so consumers can select `output_map["semantic-key"]`. Do not derive identity from a list index, generated timestamp, provider-computed value, or another attribute that is unknown before apply.
 
@@ -86,15 +90,17 @@ Model nested blocks with explicit object types. Do not use `any`, arbitrary maps
 
 Do not expose an input that no resource or data source consumes. Do not use locals merely to rename variables. Locals should normalize complete resource inputs, derive stable names, or perform a transformation used in more than one place.
 
+Bind structural relationships internally. When a subordinate resource must reference the core resource, assign the provider argument directly from the core resource, for example `network = google_compute_network.this.id`. Do not expose artificial selectors such as `network_key`, duplicate direct-reference alternatives, or parent project inputs when the module invariant already determines those values. Supporting the provider argument internally counts as complete coverage.
+
 ## Resource coverage
 
-Every selected resource must pass the coverage audit in [references/resource-coverage.md](references/resource-coverage.md). Render all supported optional nested blocks conditionally and preserve provider distinctions between omitted, empty, false, zero, and an explicitly empty collection.
+Every selected resource must pass the coverage audit in [references/resource-coverage.md](references/resource-coverage.md). The audit must distinguish caller-configurable arguments from arguments intentionally bound by the atomic module structure. Render all supported optional nested blocks conditionally and preserve provider distinctions between omitted, empty, false, zero, and an explicitly empty collection.
 
 Do not hide unsupported combinations with permissive types and let the provider fail late. Encode documented constraints as early as Terraform permits. Do not add lifecycle workarounds, `ignore_changes`, `prevent_destroy`, API enablement, imports, or implicit dependencies merely because the provider documentation mentions operational behavior; add them only when the user or module contract requires them.
 
 ## Outputs and composition
 
-Design outputs for callers and Terragrunt dependencies rather than mirroring file layout. Prefer explicit IDs, names, and provider references. For collections, return maps keyed by the same stable input keys:
+Design outputs for callers and Terragrunt dependencies rather than mirroring file layout. Return scalar IDs, names, and provider references for the single core resource. For subordinate collections, return maps keyed by the same stable input keys:
 
 ```hcl
 output "subnetwork_ids" {

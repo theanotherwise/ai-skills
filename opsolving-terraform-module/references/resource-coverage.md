@@ -13,9 +13,9 @@ Record the atomic module boundary: the one core resource instance, its subordina
 
 Do not inspect only the provider's latest documentation when the module supports an older minimum version. Implement the intersection promised by the module's provider constraint, or raise the minimum version deliberately when a requested capability requires it. Do not fetch or install a provider merely to inspect its schema unless dependency fetching is authorized.
 
-Full coverage is bounded by the selected resource, but it does not require every provider argument to become a public input. A structural argument satisfied by the module abstraction, such as a subnetwork's `network` pointing directly to the module-owned VPC ID, is fully handled by an internal binding. It must not be duplicated as an artificial selector input.
+Full coverage is bounded by the selected resource, but it does not require every provider argument to become a public input. A structural argument satisfied by the module abstraction, such as a child resource's parent reference pointing directly to the module-owned core ID, is fully handled by an internal binding. It must not be duplicated as an artificial selector input.
 
-For example, an atomic VPC module owns one `google_compute_network.this` and may own a keyed collection of `google_compute_subnetwork.this`. It must handle all remaining configurable arguments and nested blocks supported by those resource versions; it does not create a map of core networks or expose `network_key`, and it does not need Cloud Router, Cloud NAT, firewall, IAM, or API-enablement resources unless those resources are explicitly in scope.
+An atomic module owns one core resource and may own keyed collections of subordinate resources. It must handle all remaining configurable arguments and nested blocks supported by the selected resource versions; it does not create a map of core resources or expose a redundant `parent_key`, and it does not add adjacent provider resources unless they are explicitly in scope.
 
 ## Build a coverage checklist
 
@@ -61,6 +61,8 @@ Do not use `any` to mirror the provider schema. Explicit types make completeness
 
 Do not expose both an internal key and a direct external reference for the same structural relationship. If the module owns the parent, bind the child directly to it. Supporting children of an externally owned parent is a different abstraction and should be a separate module or an explicitly requested mode, not an accidental branch in the same input object.
 
+For every documented enum, range, identifier format, URL shape, collection bound, conflict, and relationship, either encode the constraint in the module or record why the provider must own validation. Do not leave a documented format as an unchecked string merely because another provider happens to reject it later.
+
 When a resource supports several operational modes, keep one coherent resource input contract with validated alternatives. Do not create several partial wrappers that each expose a different subset of the same underlying resource unless they represent genuinely distinct abstractions requested by the user.
 
 ## Review computed attributes and outputs
@@ -71,7 +73,9 @@ Do not export an entire provider resource object merely to claim full computed c
 
 ## Test the coverage
 
-The basic example should exercise the normal configuration, not every switch. Use focused Terraform tests for:
+The basic example should exercise the normal configuration, not every switch. Maintain a temporary test matrix with one row for every public input path, internal binding, documented constraint, conditional block, stable collection, and public output. Each row names the test file, run block, and assertion that proves it.
+
+Use focused Terraform tests for:
 
 - required arguments and provider-default omission;
 - each optional nested block or materially different mode;
@@ -80,7 +84,13 @@ The basic example should exercise the normal configuration, not every switch. Us
 - explicit empty collections when they differ from omission;
 - sensitive output behavior where applicable.
 
+Supplying a value in test variables is not proof that the module renders it correctly. A positive case must assert the provider resource argument, internal relationship, collection key, or output value. A negative case must name the expected failing variable, precondition, or check.
+
+Every public output requires an assertion for its shape and keys plus at least one representative value. For map outputs, verify that keys match the stable input or resource identities. Use deterministic mock data for computed attributes rather than omitting output tests because values are unknown during plan.
+
 Use mocked providers for module-logic tests when supported and already initialized. Mocking does not prove remote API behavior, so use provider documentation and existing integration tests for API-specific semantics. Do not create real infrastructure for ordinary skill validation.
+
+Coverage is complete only when the matrix has zero uncovered rows and `terraform validate` plus the required test suite have passed. Formatting and static parsing alone cannot establish module compliance. When dependencies are unavailable and initialization is not authorized, report the exact blocked checks and leave the module explicitly unverified.
 
 ## Provider upgrades
 

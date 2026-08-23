@@ -21,8 +21,8 @@ Do not reduce a resource to a convenient minimum. Every documented configurable 
 4. Before adding or substantially changing a resource, read [references/resource-coverage.md](references/resource-coverage.md) and audit the official versioned provider documentation for that resource.
 5. Design the complete typed input API before writing resource blocks. Preserve the target repository's existing compatible API when refactoring.
 6. Implement the file, collection, resource-address, output, and example conventions below.
-7. Add focused tests for the public contract and each meaningful optional or mutually exclusive path when the target repository supports Terraform tests.
-8. Run the narrowest non-mutating validation available and report any check blocked by unavailable dependencies.
+7. Build a test-coverage matrix that maps every public input path, conditional nested block, documented constraint, stable collection key, and output path to a concrete test and assertion.
+8. Run the complete non-mutating validation required by the module contract. If a provider or module dependency is unavailable, report the result as blocked and do not call the module complete or compliant.
 
 ## File convention
 
@@ -43,7 +43,7 @@ Every top-level managed `resource` block must have its own `r-<resource>.tf` fil
 
 Give every configurable resource a matching `v-<resource>.tf` file containing only the public variables owned by that resource. Prefer one typed object for a single resource and one `map(object(...))` for a repeatable subordinate resource collection. Do not place inputs for another resource in the same variable file. Bind inherited core values internally instead of duplicating them in the subordinate variable contract.
 
-For example, a VPC module uses `v-network.tf` with `r-network.tf` and `v-subnetwork.tf` with `r-subnetwork.tf`. It must not put both `google_compute_network` and `google_compute_subnetwork` in `r-network.tf`, and it must not put both `network` and `subnetworks` resource contracts in `v-network.tf`.
+For example, a module with one core service and repeatable endpoints uses `v-service.tf` with `r-service.tf` and `v-endpoint.tf` with `r-endpoint.tf`. It must not place both provider resource blocks in `r-service.tf`, and it must not place both public resource contracts in `v-service.tf`.
 
 Keep resource files at the module root. Do not create a directory per provider resource merely to satisfy this separation. When several fixed instances of the same provider type are required, give each resource block a role-qualified pair such as `v-address-internal.tf` and `r-address-internal.tf`.
 
@@ -62,7 +62,7 @@ Choose collection types by identity and ordering semantics:
 - Do not use `list(object(...))` with `count` for independently managed resources. Inserting or reordering an element must not shift resource addresses.
 - Avoid `set(object(...))` for managed resource identity because changing any hashed field can change membership. Prefer an explicit stable map key.
 
-Do not use `map(object(...))` for the core resource merely to make the module capable of creating an arbitrary number of cores. A module that owns one VPC and its subnetworks creates one network and a keyed subnetwork collection; a fleet of VPCs is a different abstraction and requires an explicit request.
+Do not use `map(object(...))` for the core resource merely to make the module capable of creating an arbitrary number of cores. A module that owns one core resource and its children creates one core instance and a keyed child collection; a fleet of core resources is a different abstraction and requires an explicit request.
 
 The map key is the Terraform identity and must remain stable when mutable attributes change. Use the same key in outputs so consumers can select `output_map["semantic-key"]`. Do not derive identity from a list index, generated timestamp, provider-computed value, or another attribute that is unknown before apply.
 
@@ -75,14 +75,14 @@ Use `snake_case` for Terraform variables, locals, resource labels, and outputs. 
 Name a single instance of a provider resource `this`:
 
 ```hcl
-resource "google_compute_network" "this" {}
+resource "example_service" "this" {}
 ```
 
 Also use `this` for a `for_each` collection when the keys identify instances:
 
 ```hcl
-resource "google_compute_subnetwork" "this" {
-  for_each = var.subnetworks
+resource "example_endpoint" "this" {
+  for_each = var.endpoints
 }
 ```
 
@@ -96,7 +96,7 @@ Model nested blocks with explicit object types. Do not use `any`, arbitrary maps
 
 Do not expose an input that no resource or data source consumes. Do not use locals merely to rename variables. Locals should normalize complete resource inputs, derive stable names, or perform a transformation used in more than one place.
 
-Bind structural relationships internally. When a subordinate resource must reference the core resource, assign the provider argument directly from the core resource, for example `network = google_compute_network.this.id`. Do not expose artificial selectors such as `network_key`, duplicate direct-reference alternatives, or parent project inputs when the module invariant already determines those values. Supporting the provider argument internally counts as complete coverage.
+Bind structural relationships internally. When a subordinate resource must reference the core resource, assign the provider argument directly from the core resource, for example `parent_id = example_service.this.id`. Do not expose artificial selectors such as `parent_key`, duplicate direct-reference alternatives, or inherited scope inputs when the module invariant already determines those values. Supporting the provider argument internally counts as complete coverage.
 
 ## Resource coverage
 
@@ -109,10 +109,10 @@ Do not hide unsupported combinations with permissive types and let the provider 
 Design outputs for callers and Terragrunt dependencies rather than mirroring file layout. Return scalar IDs, names, and provider references for the single core resource. For subordinate collections, return maps keyed by the same stable input keys:
 
 ```hcl
-output "subnetwork_ids" {
+output "endpoint_ids" {
   value = {
-    for key, subnet in google_compute_subnetwork.this :
-    key => subnet.id
+    for key, endpoint in example_endpoint.this :
+    key => endpoint.id
   }
 }
 ```
@@ -132,5 +132,18 @@ The basic example demonstrates the normal path; tests or additional named exampl
 Run `terraform fmt -check -recursive` after formatting. Run `terraform validate` and `terraform test` when their providers and modules are already available or dependency initialization is authorized. Prefer mocked provider tests for module logic when the selected Terraform version supports them.
 
 Before finishing, inspect top-level declarations and confirm that every `r-*.tf` contains exactly one managed resource block, every `d-*.tf` contains exactly one data block, and each configurable resource has the correctly named `v-*.tf` counterpart without variables belonging to another resource.
+
+Require zero uncovered rows in the test-coverage matrix:
+
+- every public input and nested input path has a positive test that asserts the value reaches the intended provider argument or internal binding;
+- every documented enum, range, format, conflict, required-together rule, and mutually exclusive choice has a negative test;
+- every optional nested block has tests for presence and omission, including empty-collection behavior when it differs from omission;
+- every stable collection verifies its resource keys and corresponding output keys without relying on list indexes;
+- every public output has an assertion for its shape, keys, sensitivity where relevant, and a representative value;
+- a test that only supplies a value without asserting the rendered resource or output does not count as coverage.
+
+Use provider documentation to derive tests; do not hardcode a provider-specific checklist into the skill. When computed values are unknown during `plan`, use provider mocks or mock defaults appropriate to the selected Terraform version so output assertions remain deterministic.
+
+`terraform fmt` and static declaration checks do not replace `terraform validate` and the required test suite. If those checks cannot run because dependencies are unavailable and initialization is not authorized, identify the exact blocked commands and hand off the module as unverified rather than complete.
 
 Do not run `terraform init` when it would fetch dependencies without authorization. Do not run `plan` against a real backend, `apply`, import, state mutation, provider authentication, or cloud API changes unless explicitly requested. Finish by reviewing the complete diff, checking conflict markers and repository status, and stating exactly which validation did and did not run.

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Opsolving - Terraform Module"
+  short_description: "Build complete, stable Terraform modules"
+  default_prompt: "Use $opsolving-terraform-module to build a complete Terraform module from the selected provider resource documentation."

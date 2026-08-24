@@ -51,8 +51,6 @@ Use this decision order:
 
 For a type shaped like `<provider>_<service>_<resource>`, prefer `v-<resource>.tf` and `r-<resource>.tf` when `<resource>` is unambiguous. Do not produce `v-<service>-<resource>.tf` or `r-<service>-<resource>.tf` merely because the provider includes its service family in the type name. If two selected resources collapse to the same noun, add the smallest meaningful qualifier instead of restoring the entire provider type.
 
-The module domain supplies the shared context. If its owned concepts are `network` and `subnetwork`, use `v-network.tf`, `r-network.tf`, `v-subnetwork.tf`, and `r-subnetwork.tf`; do not retain a redundant provider category such as `compute` in those filenames.
-
 Every top-level managed `resource` block must have its own `r-<resource>.tf` file. Never place two different resource blocks, two fixed instances, or a core resource and a subordinate resource in the same `r-*.tf` file. Nested provider blocks and Terraform `dynamic` blocks belong inside their owning resource file and do not count as separate resources.
 
 Give every configurable resource a matching `v-<resource>.tf` file containing only the public variables owned by that resource. Prefer one typed object for a single resource and one `map(object(...))` for a repeatable subordinate resource collection. Do not place inputs for another resource in the same variable file. Bind inherited core values internally instead of duplicating them in the subordinate variable contract.

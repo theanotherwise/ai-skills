@@ -30,7 +30,7 @@ Use lowercase filenames in a flat module root and pair files by individual provi
 
 ```text
 versions.tf
-locals.tf                    # only when real transformations exist
+locals.tf                    # always present; may be empty
 outputs.tf
 v-<resource>.tf              # public inputs owned by one managed resource
 d-<data-source>.tf           # exactly one top-level data block
@@ -59,7 +59,9 @@ For example, a module with one core service and repeatable endpoints uses `v-ser
 
 Keep resource files at the module root. Do not create a directory per provider resource merely to satisfy this separation. When several fixed instances of the same provider type are required, give each resource block a role-qualified pair such as `v-address-internal.tf` and `r-address-internal.tf`.
 
-Do not add `main.tf`, `providers.tf`, `backend.tf`, `terraform.tfvars`, or `imports.tf` to a reusable module under this convention. Add `moved.tf` only for an actual state-address migration. Do not keep empty `locals.tf`, `d-*.tf`, examples, or tests as placeholders.
+Always create `locals.tf`, even when the module currently defines no local values; the file itself is mandatory and may remain empty until a real local expression is needed.
+
+Do not add `main.tf`, `providers.tf`, `backend.tf`, `terraform.tfvars`, or `imports.tf` to a reusable module under this convention. Add `moved.tf` only for an actual state-address migration. Do not keep empty `d-*.tf`, examples, or tests as placeholders.
 
 Put only `required_version` and `required_providers` in `versions.tf`. Declare the minimum Terraform and provider versions required by the features used. Do not configure a provider or backend inside the child module; the caller owns provider configuration, credentials, aliases, and state.
 
@@ -143,7 +145,7 @@ The basic example demonstrates the normal path; tests or additional named exampl
 
 Run `terraform fmt -check -recursive` after formatting. Run `terraform validate` and `terraform test` when their providers and modules are already available or dependency initialization is authorized. Prefer mocked provider tests for module logic when the selected Terraform version supports them.
 
-Before finishing, inspect top-level declarations and confirm that every `r-*.tf` contains exactly one managed resource block, every `d-*.tf` contains exactly one data block, and each configurable resource has the correctly named `v-*.tf` counterpart without variables belonging to another resource. Confirm that each resource suffix is the shortest unambiguous module concept and does not retain a redundant provider service or category prefix.
+Before finishing, confirm that `versions.tf`, `locals.tf`, and `outputs.tf` exist. Inspect top-level declarations and confirm that every `r-*.tf` contains exactly one managed resource block, every `d-*.tf` contains exactly one data block, and each configurable resource has the correctly named `v-*.tf` counterpart without variables belonging to another resource. Confirm that each resource suffix is the shortest unambiguous module concept and does not retain a redundant provider service or category prefix.
 
 Require zero uncovered rows in the test-coverage matrix:
 

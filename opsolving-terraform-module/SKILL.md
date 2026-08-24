@@ -39,6 +39,20 @@ examples/<name>/main.tf      # direct module call only
 tests/<name>.tftest.hcl      # focused module tests
 ```
 
+Derive `<resource>` from the shortest unambiguous concept owned by the module, not by mechanically copying the provider resource type. Remove the provider namespace and any service, product-family, API-group, or version segment that only categorizes the resource and repeats context already established by the module.
+
+Use this decision order:
+
+1. start from the full provider resource type;
+2. remove the provider namespace;
+3. remove leading service or category segments while the remaining resource noun is unique in the module;
+4. retain only qualifiers that identify a real variant, scope, role, or resolve a collision;
+5. convert the result to lowercase hyphen-case and use it unchanged in the matching `v-*`, `r-*`, and `d-*` filenames.
+
+For a type shaped like `<provider>_<service>_<resource>`, prefer `v-<resource>.tf` and `r-<resource>.tf` when `<resource>` is unambiguous. Do not produce `v-<service>-<resource>.tf` or `r-<service>-<resource>.tf` merely because the provider includes its service family in the type name. If two selected resources collapse to the same noun, add the smallest meaningful qualifier instead of restoring the entire provider type.
+
+The module domain supplies the shared context. If its owned concepts are `network` and `subnetwork`, use `v-network.tf`, `r-network.tf`, `v-subnetwork.tf`, and `r-subnetwork.tf`; do not retain a redundant provider category such as `compute` in those filenames.
+
 Every top-level managed `resource` block must have its own `r-<resource>.tf` file. Never place two different resource blocks, two fixed instances, or a core resource and a subordinate resource in the same `r-*.tf` file. Nested provider blocks and Terraform `dynamic` blocks belong inside their owning resource file and do not count as separate resources.
 
 Give every configurable resource a matching `v-<resource>.tf` file containing only the public variables owned by that resource. Prefer one typed object for a single resource and one `map(object(...))` for a repeatable subordinate resource collection. Do not place inputs for another resource in the same variable file. Bind inherited core values internally instead of duplicating them in the subordinate variable contract.
@@ -131,7 +145,7 @@ The basic example demonstrates the normal path; tests or additional named exampl
 
 Run `terraform fmt -check -recursive` after formatting. Run `terraform validate` and `terraform test` when their providers and modules are already available or dependency initialization is authorized. Prefer mocked provider tests for module logic when the selected Terraform version supports them.
 
-Before finishing, inspect top-level declarations and confirm that every `r-*.tf` contains exactly one managed resource block, every `d-*.tf` contains exactly one data block, and each configurable resource has the correctly named `v-*.tf` counterpart without variables belonging to another resource.
+Before finishing, inspect top-level declarations and confirm that every `r-*.tf` contains exactly one managed resource block, every `d-*.tf` contains exactly one data block, and each configurable resource has the correctly named `v-*.tf` counterpart without variables belonging to another resource. Confirm that each resource suffix is the shortest unambiguous module concept and does not retain a redundant provider service or category prefix.
 
 Require zero uncovered rows in the test-coverage matrix:
 

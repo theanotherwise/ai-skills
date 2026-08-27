@@ -1,0 +1,4 @@
+interface:
+  display_name: "Opsolving - APP - Python API"
+  short_description: "Build layered FastAPI applications"
+  default_prompt: "Use $opsolving-app-python-api to create or refactor a FastAPI application with the Opsolving src/app architecture."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Opsolving - APP - Vue3"
+  short_description: "Build structured Vue 3 applications"
+  default_prompt: "Use $opsolving-app-vue3 to create or refactor a Vue 3 application with the Opsolving src/app structure."

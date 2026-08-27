@@ -1,6 +1,6 @@
-# Runtime, configuration, adapters, and migrations
+# Python API runtime, configuration, adapters, and migrations
 
-Read this reference before changing YAML configuration, structured logging, middleware, lifespan behavior, external-resource adapters, database pool settings, or Alembic migrations.
+Read this reference before changing YAML configuration, structured logging, middleware, lifespan behavior, external-resource adapters, SQLAlchemy engine/session-factory settings, or Alembic execution.
 
 ## Configuration layout
 
@@ -60,47 +60,50 @@ The generic loader validates file mechanics and the root type. Each adapter vali
 - required host, port, database, user, and password values;
 - a boolean persistence declaration when the deployment contract uses it;
 - connection timeout and SSL mode;
-- pool minimum, maximum, acquisition timeout, idle timeout, and maximum lifetime;
-- relationships such as maximum pool size being greater than or equal to minimum size.
+- SQLAlchemy pool size, non-negative maximum overflow, acquisition timeout, and recycle age.
 
 Use frozen dataclasses or another explicit typed structure. Reject booleans where an integer is expected. Parse human-readable duration values into seconds once at the adapter boundary. Validate enumerations such as supported SSL modes before constructing the external client.
 
-YAML may use deployment-oriented camel-case names such as `connectTimeout` and `maxLifetime`; Python settings use snake-case names such as `connect_timeout` and `max_lifetime`. Perform that translation in the adapter. Do not leak raw nested mappings throughout services or repositories.
+YAML may use deployment-oriented camel-case names such as `connectTimeout`, `maxOverflow`, and `acquireTimeout`; Python settings use snake-case names such as `connect_timeout`, `max_overflow`, and `acquire_timeout`. Perform that translation in the adapter. Do not leak raw nested mappings throughout models, repositories, or services.
 
 ## Adapter lifecycle
 
-An adapter module for a long-lived resource has four responsibilities:
+The PostgreSQL adapter has five responsibilities:
 
 1. load and validate technology-specific settings;
-2. construct a client or pool without external I/O;
-3. provide explicit async or sync open/close functions;
-4. expose a narrow getter for dependency composition.
+2. build a safe SQLAlchemy `URL` with the `postgresql+psycopg` driver;
+3. construct one lazy `AsyncEngine` and one `async_sessionmaker` without external I/O;
+4. provide a bounded startup connection check and explicit engine disposal;
+5. expose a narrow session-factory getter for request dependency composition.
 
-For PostgreSQL, build the connection string with the driver's safe helper rather than string concatenation. Configure bounded connect, acquire, idle, and lifetime timeouts. Construct `AsyncConnectionPool` with `open=False`; opening belongs to lifespan startup.
+Build the URL with `sqlalchemy.engine.URL.create`, including rounded positive `connect_timeout` and validated `sslmode` query values; do not concatenate credentials into a string. Configure `pool_size`, `max_overflow`, `pool_timeout`, `pool_recycle`, `pool_pre_ping=True`, and `pool_use_lifo=True` on `create_async_engine`.
 
 ```python
 database_settings = load_database_settings()
-database_pool = create_database_pool(database_settings)
+database_engine = create_database_engine(database_settings)
+database_session_factory = async_sessionmaker(
+    database_engine,
+    class_=AsyncSession,
+    expire_on_commit=False,
+)
 
 
-async def open_database_pool() -> None:
-    await database_pool.open(
-        wait=True,
-        timeout=database_settings.connection.connect_timeout,
-    )
+async def check_database_connection() -> None:
+    async with database_engine.connect():
+        pass
 
 
-async def close_database_pool() -> None:
-    await database_pool.close()
+async def close_database_engine() -> None:
+    await database_engine.dispose()
 
 
-def get_database_pool() -> AsyncConnectionPool:
-    return database_pool
+def get_database_session_factory() -> async_sessionmaker[AsyncSession]:
+    return database_session_factory
 ```
 
-Module-level construction is acceptable only when it is inert. Importing the adapter must not connect, authenticate remotely, run health checks, create schema, or migrate data. If a client library cannot be constructed inertly, construct it during lifespan and expose it through application state or an explicitly initialized holder resolved by an API dependency.
+Creating the SQLAlchemy engine and session factory at module scope is acceptable because both are inert. Importing the adapter must not connect, create an `AsyncSession`, authenticate remotely, create schema, or migrate data. A session is a mutable unit of work and must be created inside a request dependency or another explicit short-lived scope, never at module level.
 
-Do not put SQL in the PostgreSQL adapter. Do not put payment, user, or other feature rules in an external-service adapter. The adapter represents the technology contract; repositories and services represent application behavior.
+Do not put ORM statements, mapped models, or feature transaction rules in the PostgreSQL adapter. The adapter represents engine/session infrastructure; models represent schema; repositories represent persistence behavior; services represent application behavior.
 
 ## Lifespan
 
@@ -111,7 +114,11 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
-from app.adapters.postgresql import close_database_pool, database_pool, open_database_pool
+from app.adapters.postgresql import (
+    check_database_connection,
+    close_database_engine,
+    database_session_factory,
+)
 from app.config.logger import get_logger
 
 
@@ -121,21 +128,21 @@ logger = get_logger(__name__)
 @asynccontextmanager
 async def lifespan(application: FastAPI):
     logger.info("Starting API", extra={"event": "application_starting"})
-    await open_database_pool()
-    application.state.database_pool = database_pool
+    await check_database_connection()
+    application.state.database_session_factory = database_session_factory
     try:
         logger.info("API started", extra={"event": "application_started"})
         yield
     finally:
-        await close_database_pool()
+        await close_database_engine()
         logger.info("API stopped", extra={"event": "application_stopped"})
 ```
 
-Open multiple resources in dependency order and close them in reverse order. If startup of a later resource fails, ensure already opened resources are closed. Keep shutdown in `finally`. Let unrecoverable startup failure prevent readiness instead of serving requests with a missing dependency.
+The engine is lazy, so startup performs one explicit connection checkout and release. If PostgreSQL is unavailable, fail startup rather than serving requests with a broken persistence dependency. Dispose the engine in `finally`; for multiple resources, check them in dependency order and close them in reverse order.
 
-Storing a handle in `application.state` is optional when the adapter getter is already authoritative. Use state when FastAPI dependency functions need request-local access to the active application, not as a hidden service locator consumed throughout the application.
+Storing the session factory in `application.state` is optional when the adapter getter is already authoritative. Use state only from FastAPI dependency composition, not from services or repositories. Never store an `AsyncSession` in application state because a session cannot be shared safely between concurrent requests.
 
-Do not run Alembic upgrades, seed data, retry forever, or launch workers from lifespan. Those are separate operational workflows.
+Do not call `Base.metadata.create_all`, run Alembic upgrades, seed data, retry forever, or launch workers from lifespan. Schema management and background processing are separate operational workflows.
 
 ## HTTP middleware
 
@@ -183,19 +190,21 @@ app/migrations/
     `-- 0002_create_users.py
 ```
 
-`alembic.ini` points `script_location` at its own directory and makes the runtime application importable. Do not store a plaintext database URL there. `env.py` builds the migration URL from validated adapter settings so runtime and migration connection parameters stay consistent.
+`alembic.ini` points `script_location` at its own directory and makes the runtime application importable. Do not store a plaintext database URL there. `env.py` imports `database_settings` and `Base`, sets `target_metadata = Base.metadata`, and returns `database_settings.url` so runtime and migration connection parameters stay consistent.
 
-The migration environment may use a synchronous SQLAlchemy engine even when the application repository uses Psycopg's async pool. Keep that engine local to the migration command and dispose it after use. Configure offline and online modes explicitly.
+The migration environment uses a migration-local synchronous `create_engine(database_url(), poolclass=pool.NullPool)` even though the application uses `AsyncEngine`; the `postgresql+psycopg` driver supports both. Keep that engine local to the migration command, dispose it after use, and configure offline and online modes explicitly.
+
+Import every concrete mapped model module before Alembic reads `Base.metadata`. The normal contract is for `app.models.__init__` to import `Base` and the model classes or modules. If a model is not imported, autogenerate cannot see its table even though its file exists.
 
 ## Revision rules
 
 Use a stable ordered revision identifier and a concise intent in the filename. Each revision declares `revision`, `down_revision`, `branch_labels`, and `depends_on`. Keep the chain unambiguous unless the project explicitly uses branches.
 
-Put schema operations in `upgrade` and the reverse operations in `downgrade`. An intentionally empty baseline revision may use `pass`; later revisions should describe real transitions. Use SQLAlchemy/Alembic schema constructs instead of application repositories.
+Put schema operations in `upgrade` and the reverse operations in `downgrade`. An intentionally empty baseline revision may use `pass`; later revisions should describe real transitions. Use SQLAlchemy/Alembic schema constructs instead of ORM sessions or application repositories.
 
 Seed data inside a schema migration only when it is an intentional, deterministic part of the schema/application baseline. Operational or environment-specific data does not belong in a migration. Avoid importing service or route code from revisions.
 
-When a repository starts reading or writing a new table, column, constraint, or index, include the corresponding new revision in the same change unless the schema is owned externally. Never rewrite an already released migration merely to match current repository code.
+When a mapped model adds or changes a table, column, relationship constraint, index, or naming rule, include the corresponding new revision in the same change unless the schema is owned externally. Review autogenerated operations manually, especially constraint names, server defaults, nullability, indexes, data backfills, and destructive changes. Never rewrite an already released migration merely to match current model code.
 
 Creating a revision file is a source-code change. Running `upgrade`, `downgrade`, or any seed operation mutates a database and requires whatever explicit authorization the target project mandates.
 
@@ -205,11 +214,13 @@ Creating a revision file is a source-code change. Running `upgrade`, `downgrade`
 - Generic config loading validates file name, suffix, and root mapping.
 - Callers receive isolated configuration data.
 - Adapter settings are typed and validate all required technical values.
-- Importing adapters performs no external I/O.
-- Clients and pools have bounded timeouts and explicit open/close functions.
-- Lifespan opens resources before yielding and closes them in `finally`.
+- Importing the adapter creates only a lazy engine and session factory; it performs no external I/O.
+- Engine pool size, overflow, timeout, recycle, pre-ping, and LIFO behavior are explicit.
+- Lifespan checks one connection before yielding and disposes the engine in `finally`.
+- Live `AsyncSession` objects are request-scoped and never global or application-scoped.
 - Middleware remains cross-cutting and does not contain use cases.
 - Logging is configured once and secrets are excluded.
-- Repositories, not adapters, own SQL.
+- Models own schema mappings; repositories own ORM statements; adapters own engine/session infrastructure.
+- Alembic receives complete `Base.metadata` after every model module is imported.
 - Migrations are separate from API startup and request handling.
-- Every schema-dependent repository change is paired with the appropriate new revision.
+- Every mapped-schema change is paired with an appropriate reviewed revision.

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Opsolving - Release"
+  short_description: "Release projects through established Git tags"
+  default_prompt: "Use $opsolving-release to release these changes with the repository's established tag format and verify the tag-triggered build."

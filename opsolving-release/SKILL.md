@@ -1,13 +1,13 @@
 ---
 name: opsolving-release
-description: Release or deploy Git-backed projects through the repository's established tag workflow. Use when the user asks to release, deploy, publish, ship, "make a release", "do a release", "wdrozyc", or "wdrazaj"; inspect existing local and remote release tags, create and push the analogous next tag, and verify the tag-triggered build with the Actions MCP server when it is available. Do not use for an ordinary commit or push request that does not ask for a release or deployment.
+description: Release or deploy Git-backed projects through the repository's established tag workflow. Use when the user asks to release, deploy, publish, ship, "make a release", "do a release", "wdrozyc", or "wdrazaj"; inspect existing local and remote release tags, create and push the analogous next tag, verify the tag-triggered build with the Actions MCP server, and refresh or sync an Argo CD application into Kubernetes when the relevant MCP server is available. Do not use for an ordinary commit or push request that does not ask for a release or deployment.
 ---
 
 # Opsolving - Release
 
 ## Release contract
 
-For this workflow, a release is a new Git tag on the exact release commit, pushed to the repository's configured remote. Treat an explicit request to release or deploy as authorization to commit the requested release changes when needed, push that commit's current branch, create the release tag, and push the tag. Do not ask for separate confirmation for those Git operations.
+For this workflow, a release is a new Git tag on the exact release commit, pushed to the repository's configured remote. Treat an explicit request to release or deploy as authorization to commit the requested release changes when needed, push that commit's current branch, create the release tag, and push the tag. For an Argo-managed deployment, the same request authorizes the refresh or sync needed to apply the released change through the relevant Argo CD MCP server after its required build succeeds. Do not ask for separate confirmation for those operations.
 
 A commit or branch push alone is not a release. Do not create a tag for an ordinary commit or push request that does not include release or deployment intent. Do not create a hosting-provider Release object unless the user explicitly asks for one.
 
@@ -22,6 +22,7 @@ A commit or branch push alone is not a release. Do not create a tag for an ordin
 7. Confirm that the intended tag does not already exist locally or remotely and that the release commit is the expected `HEAD`. Push the current branch when it contains the release commit, create the tag using the repository's established tag type and message style, and push that exact tag. Never force-push, move an existing tag, or retag a different commit.
 8. Verify that the remote branch contains the release commit when a branch push was required, and that the remote tag resolves to the same commit as the local tag.
 9. When the Actions MCP server is available, use it to find the workflow or build triggered by the pushed tag. Follow the relevant run to a terminal result, inspect failed jobs or logs when needed, and report the build conclusion. A queued or running workflow is not a successful build. If no matching run appears, report that fact instead of claiming success or triggering an unrelated workflow.
+10. When the deployment is managed by Argo CD and the relevant Argo CD MCP server is available, identify the exact application and environment from repository instructions and deployment configuration. Wait until the released artifact or GitOps revision is present in the application's desired source, then refresh the application. If refresh and auto-sync apply the target revision, wait for completion; otherwise sync the application through the MCP server. Verify a successful operation, the intended revision or artifact, and `Synced` and `Healthy` status before reporting that the release reached Kubernetes. Never refresh or sync an application when the target environment or application is ambiguous.
 
 ## Tag pattern rules
 
@@ -33,4 +34,4 @@ A commit or branch push alone is not a release. Do not create a tag for an ordin
 
 ## Completion evidence
 
-Report the repository, release commit, exact tag, pushed branch and remote, remote tag verification, checks run, and Actions build result when available. State separately whether runtime deployment was verified; a successful tag build proves the release pipeline completed only to the stage shown by that workflow.
+Report the repository, release commit, exact tag, pushed branch and remote, remote tag verification, checks run, and Actions build result when available. For an Argo-managed deployment, also report the application, environment, sync operation result, deployed revision or artifact, and final health and sync status. State separately when runtime deployment could not be verified; a successful tag build proves the release pipeline completed only to the stage shown by that workflow.

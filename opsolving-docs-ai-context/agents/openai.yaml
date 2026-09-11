@@ -1,0 +1,4 @@
+interface:
+  display_name: "Opsolving - Docs AI Context"
+  short_description: "Read and maintain shared project documentation"
+  default_prompt: "Use $opsolving-docs-ai-context to read this project’s shared documentation and keep its technical guidance and business assumptions aligned with the requested changes."

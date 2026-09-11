@@ -1,0 +1,17 @@
+# Kierunki kompozycji z serii Homearo
+
+Wnioski z wizualnego przeglądu wszystkich 30 pełnych grafik `01.png`–`30.png` z serii 2026-09-11 oraz galerii [homearo.portal](https://www.instagram.com/homearo.portal/). Numery odnoszą się do plików w `artifacts/instagram-series-2026-09-11/` workspace Homearo; nie są załącznikami tego skilla. Wybierz kierunek pasujący do historii i obejrzyj dostępny oryginał. Nie kopiuj jednej planszy do całej serii.
+
+| Kierunek | Referencje | Co przenieść do nowego projektu |
+|---|---|---|
+| Zdjęcie wypełniające kadr i wielki nagłówek | 01 „Blisko zieleni”, 09 „Balkon po swojemu”, 11 „Jasno i przytulnie”, 13 „Układ ma znaczenie”, 14 „Aktywnie po sąsiedzku”, 21 „Spacer zaczyna się pod domem”, 27 „Taras na dobry wieczór”, 30 „Zacznij od Homearo” | Skala tekstu, mocne łamanie wierszy i wykorzystanie nieba, ściany lub ciemnej zieleni; tekst jest ważną częścią obrazu |
+| Koło albo łuk i wyraziste pole koloru | 02 „Miejsce na Twój poranek”, 06 „Twoje ogłoszenie za darmo”, 12 „Działka pod Twój pomysł” | Silny kontrast i świadomy kształt kadru; w 06 duży komunikat o darmowym ogłoszeniu jest widoczny od razu |
+| Ukośne pola i podziały | 07 „Sprawdź dojazd”, 10 „Poznaj okolicę”, 29 „Sprzedaż lub wynajem” | Dynamiczna geometria, wyraźna typografia i powiązane sceny, bez obowiązkowej dolnej stopki |
+| Asymetryczny kolaż albo papierowa kompozycja | 05 „Mały metraż, wielkie możliwości”, 16 „Miejsce dla rodziny”, 22 „Opis, który pomaga wybrać”, 24 „Codzienne sprawy blisko”, 26 „Porównaj przed decyzją” | Zróżnicowana skala ujęć i duże pole tekstowe; elementy mają cel, a nie tworzą pustego szablonu |
+| Pinezka i relacja lokalizacji ze zdjęciem | 04 „Szukaj na mapie”, 17 „Zapisz swoją okolicę” | Czytelny motyw lokalizacji; pinezka może otaczać widok albo zawierać zdjęcie, nie zastępuje marki |
+| Proces lub porównanie | 15 „Pokaż mieszkanie w dobrym świetle”, 18 „Miasto czy spokojniejsza okolica?” | Dwa kadry, gdy wyjaśniają proces lub wybór; przy telefonie utrzymaj zgodność wnętrza na ekranie i w zdjęciu |
+| Typografia wykorzystująca architekturę kadru | 03 „Dom z ogrodem”, 08 „Przestrzeń do pracy”, 19 „Kuchnia na co dzień”, 20 „Nowy adres dla Twojej firmy”, 23 „Spokojna sypialnia”, 25 „Miejsce na rower”, 28 „Zajrzyj poza zdjęcia” | Ściana, wąska kolumna, próg lub pionowy rytm mogą organizować tekst; dobierz skalę do nowych obowiązkowych komunikatów |
+
+Starsze grafiki pokazują kierunki kompozycji, nie aktualny komplet wymagań marki. Nie przenoś z nich osobnego Homearo i drugiej domeny, ikon domu, dwukolorowych liter logo, napisów producenta kliszy z 15 ani dodatkowych sloganów z dekoracji w 08 i 16. Czerwone **Homearo.pl**, **„Ogłoszenia nieruchomości za 0 zł”**, **„Poznaj okolicę”** i jednobarwne **by Presemantic** na dole po prawej obowiązują zgodnie z `SKILL.md` także przy korzystaniu z tych referencji.
+
+Przy ocenie wielkości napisów używaj pełnego obrazu. Siatka profilu zaobserwowana podczas przeglądu przycinała boki kwadratowych grafik; to nie jest wzór na obcinanie liter w finalnym pliku. Zakresy rozmiarów w `SKILL.md` są wskazówką projektową dla nowych grafik, nie odczytanymi metadanymi czcionek z postów.

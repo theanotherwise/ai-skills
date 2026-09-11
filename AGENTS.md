@@ -10,7 +10,7 @@ Each top-level skill directory must use the same lowercase hyphen-case name as t
 
 `opsolving-docs-ai-context` covers discovering and maintaining the separate `<project-name>-docs-ai-context` repository that holds shared technical documentation, business assumptions, and working procedures.
 
-`homearo-promotional-images` contains Polish instructions for narrative Homearo promotional graphics and captions. Its historical Instagram references belong to the Homearo workspace, not this repository; save generated campaign artifacts in the target project rather than the skill directory.
+`homearo-promotional-images` contains Polish instructions for narrative Homearo promotional graphics and captions, including prominent typography, both mandatory promotional messages, and a uniform operator signature. Its `references/instagram-style.md` maps composition directions from the historical Instagram series; the source images belong to the Homearo workspace, not this repository. Save generated campaign artifacts in the target project rather than the skill directory.
 
 ## Workflow
 

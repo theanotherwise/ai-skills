@@ -87,6 +87,12 @@ Na LinkedInie post strony **Homearo** i post profilu **Mateusz Adam Katana** mus
 
 Przed generowaniem rozpisz tylko zamówione publikacje: platforma, konto, pomysł obrazu, prompt, osobny plik i opis. Przed publikacją sprawdź brak powtórzeń obrazów i opisów oraz początek każdego opisu. Pięć zamówionych miejsc publikacji oznacza pięć osobnych obrazów i pięć opisów; samo wymienienie kont w tym skillu nie upoważnia do publikowania na nich. Przygotowanie treści nie oznacza jej wysłania — publikuj wyłącznie w zakresie polecenia użytkownika.
 
+## Oznaczenia AI przy publikacji
+
+Jeśli platforma pozwala opublikować dany materiał bez oznaczenia AI, nie dodawaj dobrowolnie etykiety „AI generated”, „Made with AI” lub podobnej ani dopisku „wygenerowano z AI” w opisie lub na obrazie. Dotyczy to wszystkich kanałów i kont. Przy publikacji sprawdź aktualne wymagania platformy dla tego rodzaju materiału i pozostaw opcjonalne oznaczenie wyłączone, gdy nie jest wymagane.
+
+Jeśli oznaczenie jest wymagane lub dodawane automatycznie przez platformę, zachowaj je i krótko poinformuj o tym użytkownika. Nie składaj nieprawdziwego oświadczenia o pochodzeniu obrazu ani nie usuwaj danych pochodzenia w celu obejścia automatycznego oznaczania. Nadal przedstawiaj wygenerowane sceny jako poglądowe, nie jako zdjęcia konkretnej oferty. Ta preferencja nie autoryzuje edycji wcześniej opublikowanych postów.
+
 ## Praca i kontrola jakości
 
 1. Ustal kanał, format i aktualne polecenie. Obejrzyj wskazane referencje oraz całą dostępną serię, gdy użytkownik prosi o wszystkie obrazy. Odróżniaj pełny post od przyciętej miniatury siatki profilu.

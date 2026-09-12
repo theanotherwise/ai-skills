@@ -91,7 +91,7 @@ Przed generowaniem rozpisz tylko zamówione publikacje: platforma, konto, pomys�
 
 ## Oznaczenia AI przy publikacji
 
-Jeśli platforma pozwala opublikować dany materiał bez oznaczenia AI, nie dodawaj dobrowolnie etykiety „AI generated”, „Made with AI” lub podobnej ani dopisku „wygenerowano z AI” w opisie lub na obrazie. Dotyczy to wszystkich kanałów i kont. Przy publikacji sprawdź aktualne wymagania platformy dla tego rodzaju materiału i pozostaw opcjonalne oznaczenie wyłączone, gdy nie jest wymagane.
+Jeśli platforma pozwala opublikować dany materiał bez oznaczenia AI, nie dodawaj dobrowolnie etykiety „AI generated”, „Made with AI”, „AI label” lub podobnej ani dopisku „wygenerowano z AI” w opisie lub na obrazie. Dotyczy to wszystkich kanałów i kont. Przy przygotowywaniu lub edycji posta sprawdź aktualne wymagania platformy i stan dostępnego przełącznika oznaczenia AI. **Jeśli opcjonalne oznaczenie jest włączone, wyłącz je i zapisz zmianę** w ramach zamówionej publikacji lub edycji; nie wystarczy tylko nie włączać go samodzielnie. Przed zakończeniem potwierdź, że ustawienie pozostało wyłączone po zapisie.
 
 Jeśli oznaczenie jest wymagane lub dodawane automatycznie przez platformę, zachowaj je i krótko poinformuj o tym użytkownika. Nie składaj nieprawdziwego oświadczenia o pochodzeniu obrazu ani nie usuwaj danych pochodzenia w celu obejścia automatycznego oznaczania. Nadal przedstawiaj wygenerowane sceny jako poglądowe, nie jako zdjęcia konkretnej oferty. Ta preferencja nie autoryzuje edycji wcześniej opublikowanych postów.
 

@@ -6,7 +6,7 @@ This repository stores reusable Codex skills. Keep each skill focused, self-cont
 
 ## Structure
 
-Each top-level skill directory must use the same lowercase hyphen-case name as the `name` field in its `SKILL.md`. Optional UI metadata belongs in `agents/openai.yaml`; skill-specific references, scripts, and assets belong in their standard subdirectories only when needed.
+Each top-level skill directory must use the same lowercase hyphen-case name as the `name` field in its `SKILL.md`. Optional UI metadata belongs in `agents/openai.yaml`; skill-specific references, scripts, and assets belong in their standard subdirectories only when needed. The local repository retains Homearo promotional images, docs-ai-context, local workspace and release skills. Airflow, Python API, Vue 3, Bitnami-style Helm and Terraform implementation packages are maintained in `actions-api/src/app/mcp/skills` and served at `https://mcp.psem.io/mcp/skills`; update those packages in the MCP repository.
 
 `opsolving-docs-ai-context` covers discovering and maintaining the separate `<project-name>-docs-ai-context` repository that holds shared technical documentation, business assumptions, and working procedures.
 

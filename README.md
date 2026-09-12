@@ -4,7 +4,7 @@ Reusable Codex skills maintained by Opsolving.
 
 ## Skills
 
-- [homearo-promotional-images](./homearo-promotional-images/SKILL.md) - Create distinct Homearo images and matching 15–20-word story captions, with the portal address and required @ handle first, at least five real-estate hashtags inline on LinkedIn or after a blank line on Instagram/Facebook, and one-shot pasting.
+- [homearo-promotional-images](./homearo-promotional-images/SKILL.md) - Create distinct Homearo images and matching 15–20-word story captions, starting with the bare portal address and hyphen, without profile mentions, at least five real-estate hashtags inline on LinkedIn or after a blank line on Instagram/Facebook, and one-shot pasting.
 - [opsolving-airflow-dags](./opsolving-airflow-dags/SKILL.md) - Build layered Airflow DAG repositories with explicit instances, processes, and reusable libraries.
 - [opsolving-app-python-api](./opsolving-app-python-api/SKILL.md) - Build layered FastAPI applications with SQLAlchemy ORM models, request-scoped sessions, repositories, and Alembic migrations.
 - [opsolving-app-vue3](./opsolving-app-vue3/SKILL.md) - Build structured Vue 3 applications with router-driven views, typed components, explicit state, and lifecycle boundaries.
